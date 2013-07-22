@@ -90,8 +90,9 @@ class NaverMusicAgent(Agent.Artist):
         raise Ex.MediaExpired
 
       for i, node in enumerate(html.xpath('//ul[contains(@class, "lst_photo")]//img')):
-        img_url = node.get('src').replace('/thumbnail/', '/body/')
-        metadata.art[img_url] = Proxy.Media(HTTP.Request(img_url), sort_order=(i+1))
+        thumb = node.get('src')
+        img_url = thumb.replace('/thumbnail/', '/body/')
+        metadata.art[img_url] = Proxy.Preview(HTTP.Request(thumb), sort_order=(i+1))
 
 ########################################################################  
 class NaverMusicAlbumAgent(Agent.Album):
