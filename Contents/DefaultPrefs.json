@@ -1,0 +1,8 @@
+[
+  {
+    "id": "artwork",
+    "label": "use Photo as Artwork",
+    "type": "bool",
+    "default": "false"
+  }
+]
