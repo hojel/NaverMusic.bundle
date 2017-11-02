@@ -5,6 +5,7 @@ ARTIST_SEARCH_URL = BASE_URL + '/search/search.nhn?query=%s&target=artist'
 ARTIST_INFO_URL = BASE_URL + '/artist/intro.nhn?artistId=%s'
 ARTIST_ALBUM_URL = BASE_URL + '/artist/album.nhn?artistId=%s&isRegular=Y&sorting=popular'
 ARTIST_PHOTO_URL = BASE_URL + '/artist/photo.nhn?artistId=%s'
+ARTIST_PHOTO_LIST_URL = BASE_URL + '/artist/photoListJson.nhn?artistId=%s'
 
 ALBUM_SEARCH_URL = BASE_URL + '/search/search.nhn?query=%s&target=album'
 ALBUM_INFO_URL = BASE_URL + '/album/index.nhn?albumId=%s'
@@ -62,21 +63,21 @@ class NaverMusicAgent(Agent.Artist):
     except:
       raise Ex.MediaExpired
 
-    metadata.title = html.xpath('//span[@class="txt"]')[0].text
+    metadata.title = html.xpath('//h2')[0].text
     #metadata.year = html.xpath('//dt[@class="birth"]/following-sibling::dd')[0].text
-    metadata.summary = String.DecodeHTMLEntities(String.StripTags(html.xpath('//p[@class="artist_intro_on"]')[0].text).strip())
+    metadata.summary = String.DecodeHTMLEntities(String.StripTags(html.xpath('//p[@class="dsc full"]')[0].text).strip())
 
     # poster
     if metadata.title == 'Various Artists':
       metadata.posters[VARIOUS_ARTISTS_POSTER] = Proxy.Media(HTTP.Request(VARIOUS_ARTISTS_POSTER))
     else:
-      img_url = html.xpath('//div[@class="info"]/div[contains(@class, "thumb")]/img')[0].get('src')
+      img_url = html.xpath('//span[@class="thmb"]//img')[0].get('src')
       metadata.posters[img_url] = Proxy.Media(HTTP.Request(img_url))
 
     # genre
     metadata.genres.clear()
     try:
-      for genre in html.xpath('//dt[@class="type"]/following-sibling::dd')[0].text.split(','):
+      for genre in html.xpath('//strong[@class="genre"])[0].text.split(','):
         metadata.genres.add(genre.strip())
     except:
       pass
@@ -85,14 +86,12 @@ class NaverMusicAgent(Agent.Artist):
     if Prefs['artwork']:
       url = ARTIST_PHOTO_URL % metadata.id
       try: 
-        html = HTML.ElementFromURL(url)
+        data = JSON.ObjectFromURL(url)
       except:
         raise Ex.MediaExpired
 
-      for i, node in enumerate(html.xpath('//ul[contains(@class, "lst_photo")]//img')):
-        thumb = node.get('src')
-        img_url = thumb.replace('/thumbnail/', '/body/')
-        metadata.art[img_url] = Proxy.Preview(HTTP.Request(thumb), sort_order=(i+1))
+      for i, pic in enumerate(data['photoList']):
+        metadata.art[pic['original']] = Proxy.Preview(HTTP.Request(pic['thumbnail']), sort_order=(i+1))
 
 ########################################################################  
 class NaverMusicAlbumAgent(Agent.Album):
