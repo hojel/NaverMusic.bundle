@@ -65,7 +65,9 @@ class NaverMusicAgent(Agent.Artist):
 
     metadata.title = html.xpath('//h2')[0].text
     #metadata.year = html.xpath('//dt[@class="birth"]/following-sibling::dd')[0].text
-    metadata.summary = String.DecodeHTMLEntities(String.StripTags(html.xpath('//p[@class="dsc full"]')[0].text).strip())
+    node = html.xpath('//p[@class="dsc full"]')
+    if node:
+      metadata.summary = String.DecodeHTMLEntities(String.StripTags(node[0].text).strip())
 
     # poster
     if metadata.title == 'Various Artists':
